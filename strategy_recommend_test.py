@@ -4,25 +4,22 @@ from base_energy_saving.energy_saving_strategy_recommend.strategy_manager.recomm
 from base_energy_saving.energy_saving_strategy_recommend.strategy_manager.continuous_time import ContinuousEnergySavingTime
 from base_energy_saving.energy_saving_strategy_recommend.threshold_manager.get_threshold import Threshold
 import pandas as pd
-import glob
+from glob import glob
 import os
 
 def main(file_path):
     # 示例数据
     file_path_main_cell = file_path
-    file_path_neighbor_cell_1 = '../testdata/5g_data_with_energy_saving_4915211-1537.csv'
-    file_path_neighbor_cell_2 = '../testdata/5g_data_with_energy_saving_4915211-1538.csv'
-    file_path_threshold = 'C:/Users/29449/PycharmProjects/baseEnergySaving/base_energy_saving/testdata/5g_data_city_gongshu.csv'
+    file_path_neighbor_cell_1 = '../testdata/5g_data_with_energy_saving_4915317-258.csv'
+    file_path_neighbor_cell_2 = '../testdata/5g_data_with_energy_saving_4933716-259.csv'
+
     #获取主小区的KPI数据
     df = pd.read_csv(file_path_main_cell)
     df1 = pd.read_csv(file_path_neighbor_cell_1)
     df2 = pd.read_csv(file_path_neighbor_cell_2)
-    df3 = pd.read_csv(file_path_threshold)
-
     main_cell_load = df['score']
     is_4g_saving = 0
     neighbor_cell_loads = [df1['score'], df2['score']]
-    load_threshold = df3['score']
 
     #调用阈值管理模块
     threshold = Threshold()
@@ -31,9 +28,6 @@ def main(file_path):
     # 获取T通道数
     data = ConfigurationData(channel_t=2)
     channel_T = data.get_channel_t()
-
-    channel_off_threshold, carrier_off_threshold, sleep_threshold = threshold.calculate_thresholds(
-        threshold.find_max_hour_window(load_threshold))
 
     schedule = []
 
@@ -50,8 +44,8 @@ def main(file_path):
         neighbor_cell = neighbor_cell_loads[start_index: end_index]
 
         # 获取当前批次的数据
+        channel_off_threshold, carrier_off_threshold, sleep_threshold = threshold.calculate_thresholds(threshold.find_max_hour_window(main_cell))
         saturated_threshold = 50
-
 
         if is_4g_saving:
             scheduler = Energy_Saving_4g(main_cell, neighbor_cell, saturated_threshold,
@@ -87,10 +81,9 @@ def main(file_path):
     #strategy.analyze_schedule(schedule_final)
 
 if __name__ == "__main__":
-    # 定义文件名的模式
-    file_names = ['../testdata/5g_data_with_energy_saving_4915211-1537.csv',
-                  '../testdata/5g_data_with_energy_saving_4915211-1538.csv',
-                  '../testdata/5g_data_with_energy_saving_4915211-1539.csv']
+    folder_path = '../testdata/'
+    # folder_path_absolute = os.path.abspath(folder_path)  # 转换为绝对路径
+    file_paths = glob(os.path.join(folder_path, '*.csv'))
 
-    for file_path in file_names:
+    for file_path in file_paths:
         main(file_path)
